@@ -11,10 +11,28 @@ class Poly3(TrajectoryGenerator):
         Please implement the formulas for a_0 till a_3 using self.q_0 and self.q_k
         Assume that the velocities at start and end are zero.
         """
-        self.a_0 = None
-        self.a_1 = None
-        self.a_2 = None
-        self.a_3 = None
+
+        self.q_dot_0 = np.zeros_like(self.q_0)
+        self.q_dot_k = np.zeros_like(self.q_k)
+
+        matrix = np.array(
+            [
+                [1.0,  0.0,  0.0, 0.0],
+                [-3.0, 1.0,  0.0, 0.0],
+                [0.0,  0.0,  0.0, 1.0],
+                [0.0,  0.0, -1.0, 3.0],
+            ]
+        )
+        y = np.vstack([self.q_0, self.q_dot_0, self.q_k, self.q_dot_k])
+
+        try:
+            matrix_inv = np.linalg.inv(matrix)
+        except np.linalg.LinAlgError:
+            raise ValueError(
+                f"Failed to create a polynomial trajectory generator for the given parameters: {self.q_0=}, {self.q_k=}, {self.T=}, {self.q_dot_0=}, {self.q_dot_k=}. The matrix {matrix} is singular."
+            )
+
+        self.a_0, self.a_1, self.a_2, self.a_3 = matrix_inv @ y
 
     def generate(self, t):
         """
@@ -24,7 +42,24 @@ class Poly3(TrajectoryGenerator):
         Use following formula for the polynomial from the instruction.
         """
         t /= self.T
-        q = self.a_3 * t**3 + self.a_2 * t**2 * (1 - t) + self.a_1 * t * (1 - t)**2 + self.a_0 * (1 - t)**3
-        q_dot = None
-        q_ddot = None
+        q = (
+              self.a_3 * t**3
+            + self.a_2 * t**2 * (1 - t)
+            + self.a_1 * t    * (1 - t)**2  # 1 - 2t + t**2
+            + self.a_0 * 1    * (1 - t)**3  # 1 - 3t + 3t**2 - t**3
+        )
+        # (self.a_3 - self.a_2 + self.a_1 - self.a_0)*t**3
+        # + (self.a_2 - 2*self.a_1 + 3*self.a_0)*t**2
+        # + (self.a_1 - 3*self.a_0)*t
+        # + (self.a_0)
+
+        q_dot = (
+            3 * (self.a_3 - self.a_2 + self.a_1 - self.a_0)*t**2
+            + 2 * (self.a_2 - 2*self.a_1 + 3*self.a_0)*t
+            + (self.a_1 - 3*self.a_0)
+        )
+        q_ddot = (
+            6 * (self.a_3 - self.a_2 + self.a_1 - self.a_0)*t
+            + 2 * (self.a_2 - 2*self.a_1 + 3*self.a_0)
+        )
         return q, q_dot / self.T, q_ddot / self.T**2
