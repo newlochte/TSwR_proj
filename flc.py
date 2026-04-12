@@ -15,8 +15,8 @@ end = 3
 """
 Switch to FeedbackLinearizationController as soon as you implement it
 """
-#controller = FeedbackLinearizationController(Tp)
-controller = DummyController(Tp)
+controller = FeedbackLinearizationController(Tp)
+# controller = DummyController(Tp)
 
 """
 Here you have some trajectory generators. You can use them to check your implementations.
@@ -35,12 +35,18 @@ You can add here some plots of the state 'Q' (consists of q and q_dot), controls
 with respect to time 'T' to analyze what is going on in the system
 """
 plt.subplot(221)
+plt.title('q1')
 plt.plot(T, Q[:, 0], 'r')
 plt.plot(T, Q_d[:, 0], 'b')
+plt.legend(['simulation','reference'])
 plt.subplot(222)
+plt.title('q2')
 plt.plot(T, Q[:, 1], 'r')
 plt.plot(T, Q_d[:, 1], 'b')
+plt.legend(['simulation','reference'])
 plt.subplot(223)
+plt.title('u')
 plt.plot(T, u[:, 0], 'r')
 plt.plot(T, u[:, 1], 'b')
+plt.legend(['q1','q2'])
 plt.show()
