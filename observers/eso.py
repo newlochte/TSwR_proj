@@ -18,6 +18,13 @@ class ESO:
     def update(self, q, u):
         self.states.append(copy(self.state))
         ### TODO implement ESO update
+        innovation = q - self.state[0]
+        state_dot = (
+            self.A @ self.state
+            + (self.B * u).flatten()
+            + (self.L * innovation).flatten()
+        )
+        self.state = self.state + self.Tp * state_dot
 
     def get_state(self):
         return self.state
